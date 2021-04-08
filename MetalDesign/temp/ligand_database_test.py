@@ -1,4 +1,23 @@
 
+# Superimpose metal (for test purpose)
+'''
+workdir = "/mnt/e/DesignData/ligands/NI/pfam2pdbs_sel/cores/"
+
+
+#first = ld.get_metal_core(workdir + '1a5n4.pfam.pdb1_.pdb', metal_sel)[0]
+
+#second = ld.get_metal_core(workdir + '1bxi2.pfam.pdb1_.pdb', metal_sel)[0]
+
+first = pr.parsePDB(workdir + '1a5n4.pfam.pdb1_.pdb')
+second = pr.parsePDB(workdir + '1bxi2.pfam.pdb1_.pdb')
+
+first_coords = first.select('name NI')[0].getCoords().reshape(1,3)
+second_coords = second.select('name NI')[0].getCoords().reshape(1,3)
+
+pr.calcTransformation(second_coords, first_coords).apply(second)
+
+'''
+
 # get_metal_core_seq (for test purpose)
 '''
 import os
