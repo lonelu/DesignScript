@@ -1,3 +1,0 @@
-
-_test_pdb = PDB()
-pr.writePDB('match_prody_within_radius_test.pdb.gz', match_prody_within_radius)
