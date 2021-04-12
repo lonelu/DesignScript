@@ -7,6 +7,21 @@ import sys
 sys.path.append(r'/mnt/e/GitHub_Design/Qbits')
 from qbits import cluster, transformation
 import numpy as np
+import matplotlib.pyplot as plt
+
+@dataclass
+class clu_info:
+    Metal: str
+    clu_type: str
+    clu_rmsd: float
+    total_num: int
+    clu_rank: int
+    clu_num: int
+    score: float
+
+    def to_tab_string(self):
+        clu_info = self.Metal + '\t' + self.clu_type + '\t' + str(self.clu_rmsd) + '\t' + str(self.total_num) + '\t' + str(self.clu_rank) + '\t' + str(self.clu_num) + '\t'+ str(self.score) 
+        return clu_info
 
 # Manipulate rcsb file
 
@@ -73,7 +88,33 @@ def writepdb(cores, outdir):
         outfile = c[0].split('.')[0]
         pr.writePDB(outdir + outfile + '.pdb', c[1])
 
+# Write Summary
 
+def write_clu_info(filename, clu_infos):
+    '''
+    Write information of cluters.
+    @ clu_infos: [clu_info]
+    '''
+    with open(filename, 'w') as f:
+        f.write('Metal\tclu_type\tclu_rmsd\ttotal_num\tclust_rank\tclust_num\tscore\n')
+        for r in clu_infos:
+            f.write(r.to_tab_string() + '\n')  
+
+def plot_clu_info(clu_infos, outplot):
+    fig, ax =plt.subplots(1, 1, figsize=(6,4))
+    
+    x = list(range(1, len(clu_infos) + 1))
+    y = [c.score for c in clu_infos]
+    ax.plot(x, y)
+    ax.hlines(y=0, xmin = 0, xmax = x[-1], color='r')
+    ax.legend()
+    #ax.set_xticks(x)
+    
+    ax.set_xlabel("Rank", fontsize = 12)
+    ax.set_ylabel("vdM score", fontsize = 12)
+    plt.tight_layout()
+    plt.savefig(outplot)
+    plt.close()
 # Prepare rcsb database. // extract seq within +-3 aa for each contact aa. 
 
 def connectivity_filter(pdb_prody, ind, ext_ind):
@@ -82,7 +123,7 @@ def connectivity_filter(pdb_prody, ind, ext_ind):
     if not res2:
         return False
     if res1[0].getResnum() - res2[0].getResnum() == ind - ext_ind and res1[0].getChid() == res2[0].getChid() and res1[0].getSegname() == res2[0].getSegname():
-            return True
+        return True
     return False
 
 def extend_res_indices(inds_near_res, pdb_prody, extend = 3):
@@ -107,12 +148,13 @@ def get_metal_core_seq(pdb_prody, metal_sel, extend = 3):
     count = 0
     for ni in nis:
         ni_index = ni.getIndex()
-        all_near = pdb_prody.select('nitrogen or oxygen').select('not water and within 2.6 of index ' + str(ni_index))
+        #all_near = pdb_prody.select('nitrogen or oxygen').select('not water and within 2.6 of index ' + str(ni_index))
+        all_near = pdb_prody.select('nitrogen or oxygen').select('protein and within 2.6 of index ' + str(ni_index))
         if not all_near or len(all_near) < 3:
             continue          
         inds = all_near.getResindices()
         all_near_res = pdb_prody.select('protein and resindex ' + ' '.join([str(ind) for ind in inds]))
-        if not all_near_res or len(all_near_res) < 1:
+        if not all_near_res or len(np.unique(all_near_res.getResindices())) < 2:
             continue     
         inds_near_res =  all_near_res.getResindices()
         ext_inds = extend_res_indices(inds_near_res, pdb_prody, extend)
@@ -165,8 +207,8 @@ def reduce_dup(pdbs, metal_sel):
             print(str(i) + '---' + str(j))
             #TO DO: The calcTransformation here will change the position of pdb. 
             #This will make the output pdb not align well. Current solved by re align.
-            pr.calcTransformation(pdbs[j].select('name CA'), pdbs[i].select('name CA')).apply(pdbs[j])
-            rmsd = pr.calcRMSD(pdbs[i].select('name CA'), pdbs[j].select('name CA'))
+            pr.calcTransformation(pdbs[j].select('name N CA C O'), pdbs[i].select('name N CA C O')).apply(pdbs[j])
+            rmsd = pr.calcRMSD(pdbs[i].select('name N CA C O'), pdbs[j].select('name N CA C O'))
 
             if rmsd < 0.5:
                 cluster.append(j)
@@ -257,6 +299,12 @@ def get_aa_core(pdb_prody, metal_sel, aa = 'resname HIS', consider_phipsi = Fals
             atom_inds.extend(pdb_prody.select('resindex ' + str(ind)).getIndices())
             atom_inds.extend(pdb_prody.select('resindex ' + str(ind+1)).select('name N CA').getIndices())
             sel_pdb_prody = pdb_prody.select('index ' + ' '.join([str(x) for x in atom_inds]) + ' '+ str(ni.getIndex()))
+        if extention != 0:
+            ext_inds = extend_res_indices([ind], pdb_prody, extend =extention)
+            if len(ext_inds) != 2*extention + 1:
+                continue
+            print(pdb_prody.getTitle() + '+' + '-'.join([str(x) for x in ext_inds]))
+            sel_pdb_prody = pdb_prody.select('resindex ' + ' '.join([str(ind) for ind in ext_inds]) + ' '+ str(ni.getResindex()))
         else:
             sel_pdb_prody = pdb_prody.select('resindex ' + str(ind) + ' '+ str(ni.getResindex()))
         aa_cores.append((pdb_prody.getTitle() + '_' + str(count), sel_pdb_prody))                
@@ -266,11 +314,12 @@ def extract_all_core_aa(pdbs, metal_sel, aa = 'resname HIS', consider_phipsi = F
     all_aa_cores = []
     for pdb in pdbs:
         aa_cores = get_aa_core(pdb, metal_sel, aa, consider_phipsi, extention)
+
         if aa_cores:
             all_aa_cores.extend(aa_cores)
     return all_aa_cores
 
-def superimpose_aa_core(pdbs, outdir, rmsd = 0.5, consider_phipsi = False, extention = 0):
+def superimpose_aa_core(pdbs, rmsd = 0.5, len_sel = 5, align_sel = 'name C CA N O NI'):
     '''
     There are so many ways to superimpose aa and metal.
     This method try to algin the C-CA-N_NI
@@ -280,18 +329,11 @@ def superimpose_aa_core(pdbs, outdir, rmsd = 0.5, consider_phipsi = False, exten
     clu.pdbs = []
 
     for pdb in pdbs:
-        if consider_phipsi:
-            c = pdb.select('name C CA N O NI').getCoords()
-            if len(c)!= 9:
-                continue
-            clu.pdb_coords.append(c)
-            clu.pdbs.append(pdb)
-        else:
-            c = pdb.select('name C CA N NI').getCoords()
-            if len(c)!= 4:
-                continue
-            clu.pdb_coords.append(c)
-            clu.pdbs.append(pdb)
+        c = pdb.select(align_sel).getCoords()       
+        if len(c)!= len_sel: 
+            continue
+        clu.pdb_coords.append(c)
+        clu.pdbs.append(pdb)
     clu.pdb_coords = np.array(clu.pdb_coords, dtype = 'float32')
 
     clu.make_pairwise_rmsd_mat()  
@@ -301,13 +343,27 @@ def superimpose_aa_core(pdbs, outdir, rmsd = 0.5, consider_phipsi = False, exten
         clu.make_adj_mat()
     clu.cluster(min_cluster_size = 2)
 
+    return clu
+
+def get_clu_info_write(outfile, pdbs, clu, rmsd = 0.5, metal_sel = 'NI', align_sel = 'name C CA N O NI'):
+    clu_infos = []
+    n_avg = sum([len(m) for m in clu.mems])/len(clu.mems)
+    for i in range(len(clu.mems)):
+        c = clu_info(Metal=metal_sel, clu_type = align_sel, 
+            clu_rmsd=rmsd, total_num = len(pdbs), clu_rank = i, 
+            clu_num=len(clu.mems[i]), score = np.log(len(clu.mems[i])/n_avg) )
+        clu_infos.append(c)
+    write_clu_info(outfile, clu_infos)
+    return clu_infos
+
+def print_cluster_pdbs(clu, outdir, rmsd = 0.5):
     for i in range(len(clu.mems)):
         cluster_out_dir = outdir + str(i) + '/'
         # if not os.path.exists(cluster_out_dir):
         #     os.mkdir(cluster_out_dir)
-        print_cluster_pdbs(clu, i, cluster_out_dir, str(rmsd))
+        _print_cluster_rank_pdbs(clu, i, cluster_out_dir, str(rmsd))
 
-def print_cluster_pdbs(clu, rank, outdir='./', tag=''):
+def _print_cluster_rank_pdbs(clu, rank, outdir='./', tag=''):
     try: os.makedirs(outdir)
     except: pass
     try:
@@ -332,4 +388,4 @@ def print_cluster_pdbs(clu, rank, outdir='./', tag=''):
     except IndexError:
         print('Cluster', rank, 'does not exist.')
 
-        
+       
