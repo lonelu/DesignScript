@@ -38,5 +38,8 @@ movie.produce cter.mpg, quality=90
 #save png file
 png 1mof.png, width=500, height=1200, dpi=300, ray=1
 
-
+#change resi number in pymol
 alter sele, resi=str(int(resi)-65)
+
+# Change size of sphere
+set sphere_scale, 0.35, all

@@ -4,40 +4,10 @@ import prody as pr
 sys.path.append(r'/mnt/e/GitHub_Design/DesignScript/MetalDesign')
 from ligand_database import *
 
-metal_sel = 'name NI'
+metal_sel = 'name NI or name MN'
 
-workdir = "/mnt/e/DesignData/ligands/NI_rcsb/"
+workdir = "/mnt/e/DesignData/ligands/NI_MN/"
 
-
-'''
-metal_sel = 'name MN'
-
-workdir = "/mnt/e/DesignData/ligands/MN_rcsb/"
-
-filename='all_rcsb.txt'
-organize_rcsb_file(workdir)
-download_pdb(workdir, filename, resolution = 2.5)
-
-#pdb_prody = [p for p in pdbs if p.getTitle() == '1d5n'][0]
-'''
-
-# All rcsb pids are extracted by each NI core with sequence (7 aa)
-
-pdbs = get_all_pbd_prody(workdir + 'all_rcsb/')
-
-cores = extract_all_core_seq(pdbs, metal_sel, extend = 3)
-
-superimpose_core_and_writepdb(cores, cores[0], metal_sel, workdir + '1_seq_cores/')
-
-# cluster based on core sequence. write summary and extract represent (the first on in each cluster)
-
-pdbs = get_all_pbd_prody(workdir + '1_seq_cores/')
-
-clusters = reduce_dup(pdbs, metal_sel)
-
-write_dup_summary(workdir, pdbs, clusters)
-
-extract_rep_and_writepdb(pdbs, clusters, metal_sel, workdir + '2_seq_cores_reps/')
 
 # Futher extract core with aas from cores_seq for manual check.
 
@@ -57,9 +27,11 @@ writepdb(aa_cores, workdir + '4_his_cores_reps/')
 
 pdbs = get_all_pbd_prody(workdir + '4_his_cores_reps/')
 
-clu = superimpose_aa_core(pdbs, len_sel = 5, align_sel = 'name C CA N O NI')
+clu = superimpose_aa_core(pdbs, len_sel = 5, align_sel = 'name C CA N O NI MN')
 
-print_cluster_pdbs(clu, workdir + '5_his_core_cluster/')
+metal_diffs = print_cluster_pdbs(clu, workdir + '5_his_core_cluster/')
+
+write_metal_diff(workdir + '5_his_core_cluster/', metal_diffs)
 
 clu_infos = get_clu_info_write(workdir + '5_his_core_cluster/_summary.txt', pdbs, clu, rmsd = 0.5, metal_sel = metal_sel, align_sel = 'heavy')
 
@@ -75,9 +47,11 @@ writepdb(aa_ps_cores, workdir + '6_his_ps_cores_reps/')
 
 pdbs = get_all_pbd_prody(workdir + '6_his_ps_cores_reps/')
 
-clu = superimpose_aa_core(pdbs, len_sel = 9, align_sel = 'name C CA N O NI')
+clu = superimpose_aa_core(pdbs, len_sel = 9, align_sel = 'name C CA N O NI MN')
 
-print_cluster_pdbs(clu, workdir + '7_his_core_cluster/')
+metal_diffs = print_cluster_pdbs(clu, workdir + '7_his_core_cluster/')
+
+write_metal_diff(workdir + '7_his_core_cluster/', metal_diffs)
 
 clu_infos = get_clu_info_write(workdir + '7_his_core_cluster/_summary.txt', pdbs, clu, rmsd = 0.5, metal_sel = metal_sel, align_sel = 'heavy')
 
@@ -96,7 +70,9 @@ for p in pdbs:
 
 clu = superimpose_aa_core(pdbs,  len_sel = 11, align_sel = 'heavy')
 
-print_cluster_pdbs(clu, workdir + '8_his_sc_core_cluster/')
+metal_diffs = print_cluster_pdbs(clu, workdir + '8_his_sc_core_cluster/')
+
+write_metal_diff(workdir + '8_his_sc_core_cluster/', metal_diffs)
 
 clu_infos = get_clu_info_write(workdir + '8_his_sc_core_cluster/_summary.txt', pdbs, clu, rmsd = 0.5, metal_sel = metal_sel, align_sel = 'heavy')
 
@@ -108,7 +84,9 @@ pdbs = get_all_pbd_prody(workdir + '6_his_ps_cores_reps/')
 
 clu = superimpose_aa_core(pdbs, len_sel = 15, align_sel = 'heavy')
 
-print_cluster_pdbs(clu, workdir + '9_his_sc_ps_core_cluster/')
+metal_diffs = print_cluster_pdbs(clu, workdir + '9_his_sc_ps_core_cluster/')
+
+write_metal_diff(workdir + '9_his_sc_ps_core_cluster/', metal_diffs)
 
 clu_infos = get_clu_info_write(workdir + '9_his_sc_ps_core_cluster/_summary.txt', pdbs, clu, rmsd = 0.5, metal_sel = metal_sel, align_sel = 'heavy')
 
@@ -124,9 +102,11 @@ writepdb(aa_2aa_cores, workdir + '10_his_2aa_cores_reps/')
 
 pdbs = get_all_pbd_prody(workdir + '10_his_2aa_cores_reps/')
 
-clu = superimpose_aa_core(pdbs, len_sel = 21, align_sel = 'name C CA N O NI')
+clu = superimpose_aa_core(pdbs, len_sel = 21, align_sel = 'name C CA N O NI MN')
 
-print_cluster_pdbs(clu, workdir + '11_his_2aa_cores_cluster/')
+metal_diffs = print_cluster_pdbs(clu, workdir + '11_his_2aa_cores_cluster/')
+
+write_metal_diff(workdir + '11_his_2aa_cores_cluster/', metal_diffs)
 
 clu_infos = get_clu_info_write(workdir + '11_his_2aa_cores_cluster/_summary.txt', pdbs, clu, rmsd = 0.5, metal_sel = metal_sel, align_sel = 'heavy')
 
@@ -143,12 +123,12 @@ writepdb(aa_2aa_cores, workdir + '12_2his_cores_reps/')
 _pdbs = get_all_pbd_prody(workdir + '12_2his_cores_reps/')
 
 for i in range(5, 10):
-    clu = superimpose_aa_core(_pdbs, len_sel = i*4 + 1, align_sel = 'name C CA N O NI')
+    clu = superimpose_aa_core(_pdbs, len_sel = i*4 + 1, align_sel = 'name C CA N O NI MN')
 
     if not clu or len(clu.mems) == 0: continue
     subworkdir = workdir + '13_2his_cores_cluster_' + str(i) + '/'
-    print_cluster_pdbs(clu, subworkdir)
-
+    metal_diffs = print_cluster_pdbs(clu, subworkdir)
+    write_metal_diff(subworkdir, metal_diffs)
     clu_infos = get_clu_info_write(subworkdir + '_summary.txt', pdbs, clu, rmsd = 0.5, metal_sel = metal_sel, align_sel = 'name C CA N O NI')
 
     plot_clu_info(clu_infos, subworkdir + '_score.png')
