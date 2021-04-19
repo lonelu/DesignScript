@@ -44,6 +44,8 @@ def organize_rcsb_file(workdir = "/mnt/e/DesignData/ligands/NI_rcsb/"):
 # download rcsb pdb files
 
 def download_pdb(workdir, filename, resolution = 2.5):
+    if not os.path.exists(workdir):
+        os.mkdir(workdir)
     all_pdbs = []
     with open(workdir + filename, 'r') as f: 
         for line in f.readlines():
@@ -55,12 +57,18 @@ def download_pdb(workdir, filename, resolution = 2.5):
                 continue
             all_pdbs.append(r[0].split('"')[1])
 
+    exist_pdb = set()
+    for file in os.listdir(workdir):
+        if file.endswith(".pdb.gz"):
+            exist_pdb.add(file.split('.')[0].upper())
+
     pr.pathPDBFolder(workdir)
     for p in all_pdbs:
+        if p in exist_pdb: continue
         pr.fetchPDBviaFTP(p, compressed = False) 
 
     # #Then unzip them in linux with:  
-    # cd "/mnt/e/DesignData/ligands/NI_rcsb/"
+    # cd /mnt/e/DesignData/ligands/NI_rcsb/
     # gunzip *.gz
 
 # Basic function. 
@@ -105,7 +113,7 @@ def write_clu_info(filename, clu_infos):
             f.write(r.to_tab_string() + '\n')  
 
 def plot_clu_info(clu_infos, outplot):
-    fig, ax =plt.subplots(1, 1, figsize=(6,4))
+    fig, (ax, ax1) =plt.subplots(2, 1, figsize=(12,8))
     
     x = list(range(1, len(clu_infos) + 1))
     y = [c.score for c in clu_infos]
@@ -113,9 +121,12 @@ def plot_clu_info(clu_infos, outplot):
     ax.hlines(y=0, xmin = 0, xmax = x[-1], color='r')
     ax.legend()
     #ax.set_xticks(x)
-    
     ax.set_xlabel("Rank", fontsize = 12)
     ax.set_ylabel("vdM score", fontsize = 12)
+
+    counts = [c.clu_num for c in clu_infos]
+    ax1.bar(x, counts)
+
     plt.tight_layout()
     plt.savefig(outplot)
     plt.close()
@@ -131,7 +142,7 @@ def connectivity_filter(pdb_prody, ind, ext_ind):
         return True
     return False
 
-def extend_res_indices(inds_near_res, pdb_prody, extend = 3):
+def extend_res_indices(inds_near_res, pdb_prody, extend = 4):
     extend_inds = []
     inds = set()
     for ind in inds_near_res:
@@ -142,7 +153,8 @@ def extend_res_indices(inds_near_res, pdb_prody, extend = 3):
                 inds.add(the_ind)
     return extend_inds
 
-def get_metal_core_seq(pdb_prody, metal_sel, extend = 3):
+def get_metal_core_seq(pdb_prody, metal_sel, extend = 4):
+    metal = metal_sel.split(' ')[-1]
     nis = pdb_prody.select(metal_sel)
 
     # A pdb can contain more than one NI.
@@ -166,8 +178,22 @@ def get_metal_core_seq(pdb_prody, metal_sel, extend = 3):
         ext_inds = extend_res_indices(inds, pdb_prody, extend)
         count += 1
         sel_pdb_prody = pdb_prody.select('resindex ' + ' '.join([str(ind) for ind in ext_inds]) + ' '+ str(ni.getResindex()))
-        metal_cores.append((pdb_prody.getTitle() + '_' + str(count), sel_pdb_prody))        
+        metal_cores.append((pdb_prody.getTitle() + '_' + metal + '_'+ str(count), sel_pdb_prody))        
     return metal_cores
+
+def extract_all_core_seq_from_path(workdir, metal_sel, extend = 3):
+    cores = []
+    for pdb_path in os.listdir(workdir):
+        if not pdb_path.endswith(".pdb"):
+            continue
+        try:
+            pdb_prody = pr.parsePDB(workdir + pdb_path)
+            core = get_metal_core_seq(pdb_prody, metal_sel, extend)
+            if core:
+                cores.extend(core)
+        except:
+            print('not sure')   
+    return cores
 
 def extract_all_core_seq(pdbs, metal_sel, extend = 3):
     cores = []
@@ -210,13 +236,16 @@ def reduce_dup(pdbs, metal_sel):
             if j in clustered: continue
             if len(pdbs[i].select('name N CA C O')) != len(pdbs[j].select('name N CA C O')):
                 continue
-            print(str(i) + '---' + str(j))
+            #print(str(i) + '---' + str(j))
+            sequence_equal = False
+            if pdbs[i].select('name CA').getSequence() == pdbs[i].select('name CA').getSequence():
+                sequence_equal = True
             #TO DO: The calcTransformation here will change the position of pdb. 
             #This will make the output pdb not align well. Current solved by re align.
             pr.calcTransformation(pdbs[j].select('name N CA C O'), pdbs[i].select('name N CA C O')).apply(pdbs[j])
             rmsd = pr.calcRMSD(pdbs[i].select('name N CA C O'), pdbs[j].select('name N CA C O'))
 
-            if rmsd < 0.5:
+            if (sequence_equal and rmsd < 0.8) or rmsd < 0.25:
                 cluster.append(j)
                 clustered.add(j)
 
@@ -278,6 +307,7 @@ def get_aa_core(pdb_prody, metal_sel, aa = 'resname HIS', consider_phipsi = Fals
     extract amino acid core + metal.
     if consider_phipsi == True. Extract 
     '''
+    aa_name = aa.split(' ')[-1]
     nis = pdb_prody.select(metal_sel)
 
     # A pdb can contain more than one NI.
@@ -313,7 +343,7 @@ def get_aa_core(pdb_prody, metal_sel, aa = 'resname HIS', consider_phipsi = Fals
             sel_pdb_prody = pdb_prody.select('resindex ' + ' '.join([str(ind) for ind in ext_inds]) + ' '+ str(ni.getResindex()))
         else:
             sel_pdb_prody = pdb_prody.select('resindex ' + str(ind) + ' '+ str(ni.getResindex()))
-        aa_cores.append((pdb_prody.getTitle() + '_' + str(count), sel_pdb_prody))                
+        aa_cores.append((pdb_prody.getTitle() + '_' + aa_name + '_' + str(count), sel_pdb_prody))                
     return aa_cores
         
 def get_2aa_core(pdb_prody, metal_sel, aa = 'resname HIS', extention = 3, extention_out = 1):
@@ -321,6 +351,7 @@ def get_2aa_core(pdb_prody, metal_sel, aa = 'resname HIS', extention = 3, extent
     extract 2 amino acid core + metal.
 
     '''
+    aa_name = aa.split(' ')[-1]
     nis = pdb_prody.select(metal_sel)
 
     # A pdb can contain more than one NI.
@@ -360,7 +391,7 @@ def get_2aa_core(pdb_prody, metal_sel, aa = 'resname HIS', extention = 3, extent
         ext_inds = overlap = list(set(exts[i]) | set(exts[j]))
         ext_inds = [x for x in ext_inds if x >= pairs_ind[v][0]-extention_out and x <= pairs_ind[v][1]+extention_out]
         sel_pdb_prody = pdb_prody.select('resindex ' + ' '.join([str(ind) for ind in ext_inds]) + ' '+ str(ni.getResindex()))
-        aa_cores.append((pdb_prody.getTitle() + '_' + str(count), sel_pdb_prody))                
+        aa_cores.append((pdb_prody.getTitle() + '_' + aa_name + '_' + str(count), sel_pdb_prody))                
     return aa_cores
 
 def extract_all_core_aa(pdbs, metal_sel, aa = 'resname HIS', consider_phipsi = False, extention = 0, extract2aa = False):
@@ -415,15 +446,12 @@ def get_clu_info_write(outfile, pdbs, clu, rmsd = 0.5, metal_sel = 'NI', align_s
     return clu_infos
 
 def print_cluster_pdbs(clu, outdir, rmsd = 0.5):
-    metal_diffs = []
+
     for i in range(len(clu.mems)):
         cluster_out_dir = outdir + str(i) + '/'
         # if not os.path.exists(cluster_out_dir):
         #     os.mkdir(cluster_out_dir)
-        metal_diff = _print_cluster_rank_pdbs(clu, i, cluster_out_dir, str(rmsd))
-        metal_diffs.append(metal_diff)
-    return metal_diffs
-
+        _print_cluster_rank_pdbs(clu, i, cluster_out_dir, str(rmsd))
 
 def _print_cluster_rank_pdbs(clu, rank, outdir='./', tag=''):
     try: os.makedirs(outdir)
@@ -436,32 +464,105 @@ def _print_cluster_rank_pdbs(clu, rank, outdir='./', tag=''):
         R, m_com, t_com = transformation.get_rot_trans(clu.pdb_coords[cent],
                                         clu.pdb_coords[clu.cents[0]])
         cent_coords = np.dot((clu.pdb_coords[cent] - m_com), R) + t_com
-        
-        metal_diff = [0, 0]
 
         for i, mem in enumerate(mems):
             R, m_com, t_com = transformation.get_rot_trans(clu.pdb_coords[mem], cent_coords)
             pdb = clu.pdbs[mem].copy()
-
-            if pdb.select('name NI'):
-                metal_diff[0]+=1
-            elif pdb.select('name MN'):
-                metal_diff[1]+=1
-
             pdb_coords = pdb.getCoords()
             coords_transformed = np.dot((pdb_coords - m_com), R) + t_com
             pdb.setCoords(coords_transformed)
             is_cent = '_centroid' if mem == cent else ''
             pr.writePDB(outdir + 'cluster_' + str(rank) + '_mem_' + str(i)
                          + is_cent + '_' + pdb.getTitle().split('.')[0] + '.pdb', pdb)
-        return metal_diff
 
     except IndexError:
         print('Cluster', rank, 'does not exist.')
 
+def check_metal_diff(clu, metals = ['CA', 'CO', 'CU', 'FE', 'MG', 'MN', 'NI', 'ZN']):
+    metal_diffs = []
+    for rank in range(len(clu.mems)):
+        if not clu.mems[rank].any(): continue
 
-def write_metal_diff(workdir, metal_diffs):
+        mems = clu.mems[rank]  
+        metal_diff = [0]*len(metals)
+        for i, mem in enumerate(mems):
+            pdb = clu.pdbs[mem]
+
+            if pdb.select('ion and name CA'):
+                metal_diff[0]+=1
+            elif pdb.select('name CO'):
+                metal_diff[1]+=1
+            elif pdb.select('name CU'):
+                metal_diff[2]+=1
+            elif pdb.select('name FE'):
+                metal_diff[3]+=1
+            elif pdb.select('name MG'):
+                metal_diff[4]+=1                
+            elif pdb.select('name MN'):
+                metal_diff[5]+=1
+            elif pdb.select('name NI'):
+                metal_diff[6]+=1
+            elif pdb.select('name ZN'):
+                metal_diff[7]+=1
+
+        metal_diffs.append(metal_diff)
+    return metal_diffs    
+
+def write_metal_diff(workdir, metal_diffs, metals = ['CA', 'CO', 'CU', 'FE', 'MG', 'MN', 'NI', 'ZN']):
     with open(workdir + 'metal_diff.txt', 'w') as f:
-        f.write('NI\tMN\n')
+        f.write('\t'.join(metals) + '\n')
         for md in metal_diffs:
-            f.write(str(md[0]) + '\t' + str(md[1]) + '\n')
+            f.write('\t'.join([str(x) for x in md]) + '\n')
+
+# Extract 3d angle
+
+def get_atom_core(pdb_prody, metal_sel, tag = '_atom'):
+    '''
+    extract all nearby atoms
+    '''
+    nis = pdb_prody.select(metal_sel)
+
+    # A pdb can contain more than one NI.
+    if not nis:
+        print('No Metal?' + pdb_prody.getTitle())
+        return
+    
+    ni = nis[0]
+    atom_cores = []
+    count = 0
+
+    all_atom = pdb_prody.select('protein and within 2.6 of index ' + str(ni.getIndex())).select('nitrogen or oxygen')
+    if not all_atom:
+        return     
+    atom_inds = np.unique(all_atom.getIndices())
+    sel_pdb_prody = pdb_prody.select('index ' + ' '.join([str(x) for x in atom_inds]) + ' '+ str(ni.getIndex()))
+    atom_cores.append(( pdb_prody.getTitle() + tag, sel_pdb_prody))   
+
+    return atom_cores
+
+def extract_all_atom_core(pdbs, metal_sel, tag  ='_atom'):
+    all_atom_cores = []
+    for pdb in pdbs:
+        atom_cores = get_atom_core(pdb, metal_sel, tag)
+        if atom_cores:
+            all_atom_cores.extend(atom_cores)
+    return all_atom_cores
+
+
+# run cluster
+
+def run_cluster(_pdbs, workdir, outdir, rmsd, metal_sel, len_sel, align_sel):
+    
+    clu = superimpose_aa_core(_pdbs, rmsd = rmsd, len_sel = len_sel, align_sel = align_sel)
+    
+    if not clu or len(clu.mems) == 0: return
+    
+    print_cluster_pdbs(clu, workdir + outdir)
+
+    metal_diffs = check_metal_diff(clu)
+
+    write_metal_diff(workdir + outdir, metal_diffs)
+
+    clu_infos = get_clu_info_write(workdir + outdir + '_summary.txt', _pdbs, clu, rmsd = rmsd, metal_sel = metal_sel, align_sel = align_sel)
+
+    plot_clu_info(clu_infos, workdir + outdir + '_score.png')
