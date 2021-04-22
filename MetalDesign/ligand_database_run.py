@@ -217,3 +217,23 @@ for i in range(3, 6):
     clu_infos = get_clu_info_write(subworkdir + '_summary.txt', pdbs, clu, rmsd = 0.2, metal_sel = metal_sel, align_sel='all')
 
     plot_clu_info(clu_infos, subworkdir + '_score.png')
+
+# Align atom core from 2his_7aa core
+
+workdir = '/mnt/e/DesignData/ligands/all_metal/'
+
+metal_sel = 'ion or name NI MN ZN CO CU MG FE' 
+
+align_sel_backbone = 'name C CA N O NI MN ZN CO CU MG FE or ion'
+
+pdbs = get_all_pbd_prody(workdir + '13_2his_cores_cluster_7_0_cores/')
+
+atom_cores = extract_all_atom_core(pdbs, metal_sel, tag = '_atom')
+
+writepdb(atom_cores, workdir + '13_2his_cores_cluster_7_0_cores_cluster/')
+
+_pdbs = get_all_pbd_prody(workdir + '13_2his_cores_cluster_7_0_cores_cluster/')
+
+for i in range(3, 6):
+    subworkdir = '13_2his_cores_cluster_7_0_cores_cluster_' + str(i) + '/'
+    run_cluster(_pdbs, workdir, subworkdir, rmsd = 0.2, metal_sel = metal_sel, len_sel = i+1, align_sel = 'all')

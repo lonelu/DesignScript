@@ -165,11 +165,11 @@ def get_metal_core_seq(pdb_prody, metal_sel, extend = 4):
     count = 0
     for ni in nis:
         ni_index = ni.getIndex()
-        #all_near = pdb_prody.select('nitrogen or oxygen').select('not water and within 2.6 of index ' + str(ni_index))
-        all_near = pdb_prody.select('protein and within 2.6 of index ' + str(ni_index))
-        if not all_near or not all_near.select('nitrogen or oxygen') or len(all_near.select('nitrogen or oxygen')) < 3:
+        #all_near = pdb_prody.select('nitrogen or oxygen or sulfur').select('not water and within 2.83 of index ' + str(ni_index))
+        all_near = pdb_prody.select('protein and within 2.83 of index ' + str(ni_index))
+        if not all_near or not all_near.select('nitrogen or oxygen or sulfur') or len(all_near.select('nitrogen or oxygen or sulfur')) < 3:
             continue          
-        inds = all_near.select('nitrogen or oxygen').getResindices()
+        inds = all_near.select('nitrogen or oxygen or sulfur').getResindices()
         # all_near_res = pdb_prody.select('protein and resindex ' + ' '.join([str(ind) for ind in inds]))
         # if not all_near_res or len(np.unique(all_near_res.getResindices())) < 2:
         #     continue     
@@ -285,7 +285,7 @@ def get_metal_core(pdb_prody, metal_sel):
     count = 0
     for ni in nis:
         ni_index = ni.getIndex()
-        all_near = pdb_prody.select('not water and within 2.6 of index ' + str(ni_index))
+        all_near = pdb_prody.select('not water and within 2.83 of index ' + str(ni_index))
         inds = all_near.getResindices()
         count += 1
         metal_cores.append((pdb_prody.getTitle(), pdb_prody.select('resindex ' + ' '.join([str(ind) for ind in inds]))))
@@ -319,7 +319,7 @@ def get_aa_core(pdb_prody, metal_sel, aa = 'resname HIS', consider_phipsi = Fals
     aa_cores = []
     count = 0
 
-    all_aa = pdb_prody.select(aa + ' and within 2.6 of index ' + str(ni.getIndex()))
+    all_aa = pdb_prody.select(aa + ' and within 2.83 of index ' + str(ni.getIndex()))
     if not all_aa:
         return          
     inds = np.unique(all_aa.getResindices())
@@ -363,7 +363,7 @@ def get_2aa_core(pdb_prody, metal_sel, aa = 'resname HIS', extention = 3, extent
     aa_cores = []
     count = 0
 
-    all_aa = pdb_prody.select(aa + ' and within 2.6 of index ' + str(ni.getIndex()))
+    all_aa = pdb_prody.select(aa + ' and within 2.83 of index ' + str(ni.getIndex()))
     if not all_aa:
         return          
     inds = np.unique(all_aa.getResindices())
@@ -531,7 +531,7 @@ def get_atom_core(pdb_prody, metal_sel, tag = '_atom'):
     atom_cores = []
     count = 0
 
-    all_atom = pdb_prody.select('protein and within 2.6 of index ' + str(ni.getIndex())).select('nitrogen or oxygen')
+    all_atom = pdb_prody.select('protein and within 2.83 of index ' + str(ni.getIndex())).select('nitrogen or oxygen or sulfur')
     if not all_atom:
         return     
     atom_inds = np.unique(all_atom.getIndices())
