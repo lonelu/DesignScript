@@ -4,8 +4,8 @@ from scipy.spatial.distance import cdist
 from dataclasses import dataclass
 import shutil
 import sys
-sys.path.append(r'/mnt/e/GitHub_Design/Qbits')
-from qbits import cluster, transformation
+import cluster
+import transformation
 import numpy as np
 
 @dataclass

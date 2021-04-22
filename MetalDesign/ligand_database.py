@@ -4,10 +4,9 @@ from scipy.spatial.distance import cdist
 from dataclasses import dataclass
 import shutil
 import sys
-sys.path.append(r'/mnt/e/GitHub_Design/Qbits')
-from qbits import cluster, transformation
 import numpy as np
 import matplotlib.pyplot as plt
+import cluster
 
 @dataclass
 class clu_info:
@@ -191,6 +190,7 @@ def extract_all_core_seq_from_path(workdir, metal_sel, extend = 3):
             core = get_metal_core_seq(pdb_prody, metal_sel, extend)
             if core:
                 cores.extend(core)
+            pdb_prody = None
         except:
             print('not sure')   
     return cores
