@@ -4,6 +4,8 @@ import importlib
 
 importlib.reload(sys.modules['ligand_database']) 
 from ligand_database import * 
+importlib.reload(sys.modules['search_struct']) 
+from search_struct import *
 
 # rename files
 import os

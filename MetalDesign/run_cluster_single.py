@@ -15,17 +15,17 @@ metal_sel = 'ion or name NI MN ZN CO CU MG FE'
 
 align_sel_backbone = 'name C CA N O NI MN ZN CO CU MG FE or ion'
 
-aa = 'resname CYS' #Change len_sel according to aa in the following code.
+aa = 'resname HIS' #Change len_sel according to aa in the following code.
 
-aa_name = 'CYS' 
+aa_name = 'HIS' 
 
 len_sel = 5
 
-len_sel_sc = len_sel + 2 #Change len_sel according to aa sidechain number. His:6, Glu: 5, Asp: 4, Cyc: 2
+len_sel_sc = len_sel + 6 #Change len_sel according to aa sidechain number. His:6, Glu: 5, Asp: 4, Cyc: 2
 
 len_sel_ps = len_sel + 4 
 
-len_sel_ps_sc = len_sel_ps + 2 #Change len_sel according to aa sidechain number. His:6, Glu: 5, Asp: 4, Cyc: 2
+len_sel_ps_sc = len_sel_ps + 6 #Change len_sel according to aa sidechain number. His:6, Glu: 5, Asp: 4, Cyc: 2
 
 
 
@@ -60,7 +60,7 @@ aa_ps_cores = extract_all_core_aa(pdbs, metal_sel, aa = aa, consider_phipsi = Tr
 writepdb(aa_ps_cores, workdir + '5_' + aa_name + '_ps_cores_reps/')
 
 _pdbs = get_all_pbd_prody(workdir + '5_' + aa_name + '_ps_cores_reps/')
-run_cluster(_pdbs, workdir, '5_' + aa_name + '_cores_cluster/', rmsd = 0.5, metal_sel = metal_sel, len_sel = len_sel_ps, align_sel = align_sel_backbone)
+run_cluster(_pdbs, workdir, '5_' + aa_name + '_ps_cores_cluster/', rmsd = 0.5, metal_sel = metal_sel, len_sel = len_sel_ps, align_sel = align_sel_backbone)
 
 # Align aa core + sidechain + phipsi
 
@@ -74,24 +74,3 @@ writepdb(aa_2aa_cores, workdir + '6_' + aa_name + '_2aa_cores_reps/')
 _pdbs = get_all_pbd_prody(workdir + '6_' + aa_name + '_2aa_cores_reps/')
 run_cluster(_pdbs, workdir, '6_' + aa_name + '_2aa_cores_cluster/', rmsd = 0.5, metal_sel = metal_sel, len_sel = 21, align_sel = align_sel_backbone)
 
-# Align 2 his core 
-
-aa_2aa_cores = extract_all_core_aa(pdbs, metal_sel, aa = aa, extention= 3, extract2aa=True)
-writepdb(aa_2aa_cores, workdir + '7_2' + aa_name + '_cores_reps/')
-
-_pdbs = get_all_pbd_prody(workdir + '7_2' + aa_name + '_cores_reps/')
-for i in range(5, 10):
-    subworkdir = '7_2' + aa_name + '_cores_cluster_' + str(i) + '/'
-    run_cluster(_pdbs, workdir, subworkdir, rmsd = 0.5, metal_sel = metal_sel, len_sel = i*4 + 1, align_sel = align_sel_backbone)
-
-# Align atom core
-
-'''
-atom_cores = extract_all_atom_core(pdbs, metal_sel, tag = '_atom')
-writepdb(atom_cores, workdir + '8_atom_cores_reps/')
-
-_pdbs = get_all_pbd_prody(workdir + '8_atom_cores_reps/')
-for i in range(3, 6):
-    subworkdir = '8_atom_cores_clu_' + str(i) + '/'
-    run_cluster(_pdbs, workdir, subworkdir, rmsd = 0.2, metal_sel = metal_sel, len_sel = i+1, align_sel = 'all')
-'''

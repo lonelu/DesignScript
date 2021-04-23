@@ -7,6 +7,7 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import cluster
+import transformation
 
 @dataclass
 class clu_info:
@@ -346,12 +347,12 @@ def get_aa_core(pdb_prody, metal_sel, aa = 'resname HIS', consider_phipsi = Fals
         aa_cores.append((pdb_prody.getTitle() + '_' + aa_name + '_' + str(count), sel_pdb_prody))                
     return aa_cores
         
-def get_2aa_core(pdb_prody, metal_sel, aa = 'resname HIS', extention = 3, extention_out = 1):
+def get_2aa_core(pdb_prody, metal_sel, aas = ['HIS', 'HIS'], extention = 3, extention_out = 1):
     '''
     extract 2 amino acid core + metal.
 
     '''
-    aa_name = aa.split(' ')[-1]
+    aa_name = '_'.join(aas)
     nis = pdb_prody.select(metal_sel)
 
     # A pdb can contain more than one NI.
@@ -363,7 +364,7 @@ def get_2aa_core(pdb_prody, metal_sel, aa = 'resname HIS', extention = 3, extent
     aa_cores = []
     count = 0
 
-    all_aa = pdb_prody.select(aa + ' and within 2.83 of index ' + str(ni.getIndex()))
+    all_aa = pdb_prody.select('protein and within 2.83 of index ' + str(ni.getIndex()))
     if not all_aa:
         return          
     inds = np.unique(all_aa.getResindices())
@@ -378,6 +379,15 @@ def get_2aa_core(pdb_prody, metal_sel, aa = 'resname HIS', extention = 3, extent
         for j in range(i+1, len(inds)):
             overlap = list(set(exts[i]) & set(exts[j]))
             if len(overlap) ==0: continue
+
+            filtered = True
+            if aas and len(aas)==2:
+                if pdb_prody.select('resindex ' + str(inds[i])).getResnames()[0] == aas[0] and pdb_prody.select('resindex ' + str(inds[j])).getResnames()[0] == aas[1]:
+                    filtered= False
+                elif pdb_prody.select('resindex ' + str(inds[i])).getResnames()[0] == aas[1] and pdb_prody.select('resindex ' + str(inds[j])).getResnames()[0] == aas[0]:
+                    filtered= False
+            if filtered: continue
+
             pairs.append((i, j))
             if inds[i] < inds[j]:
                 pairs_ind.append((inds[i], inds[j]))
@@ -388,17 +398,17 @@ def get_2aa_core(pdb_prody, metal_sel, aa = 'resname HIS', extention = 3, extent
         i = pairs[v][0]
         j = pairs[v][1]
         count += 1
-        ext_inds = overlap = list(set(exts[i]) | set(exts[j]))
+        ext_inds = list(set(exts[i]) | set(exts[j]))
         ext_inds = [x for x in ext_inds if x >= pairs_ind[v][0]-extention_out and x <= pairs_ind[v][1]+extention_out]
         sel_pdb_prody = pdb_prody.select('resindex ' + ' '.join([str(ind) for ind in ext_inds]) + ' '+ str(ni.getResindex()))
         aa_cores.append((pdb_prody.getTitle() + '_' + aa_name + '_' + str(count), sel_pdb_prody))                
     return aa_cores
 
-def extract_all_core_aa(pdbs, metal_sel, aa = 'resname HIS', consider_phipsi = False, extention = 0, extract2aa = False):
+def extract_all_core_aa(pdbs, metal_sel, aa = 'resname HIS', consider_phipsi = False, extention = 0, extention_out = 1, extract2aa = False, aas = None):
     all_aa_cores = []
     for pdb in pdbs:
         if extract2aa:
-            aa_cores = get_2aa_core(pdb, metal_sel, aa, extention)
+            aa_cores = get_2aa_core(pdb, metal_sel, aas, extention, extention_out)
         else:
             aa_cores = get_aa_core(pdb, metal_sel, aa, consider_phipsi, extention)
 
