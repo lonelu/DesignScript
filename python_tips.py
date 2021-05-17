@@ -1,6 +1,8 @@
 # reload module in ipython
 import sys
 import importlib 
+importlib.reload(sys.modules['metalprot']) 
+from metalprot import search_struct
 
 importlib.reload(sys.modules['ligand_database']) 
 from ligand_database import * 

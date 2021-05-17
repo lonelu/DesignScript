@@ -1,0 +1,4 @@
+-s backbone_ZnNDI_start_round1_57_round2_92.pdb
+-resfile all_ala_resfile.txt
+-out:suffix _all_ala
+-out:no_nstruct_label
