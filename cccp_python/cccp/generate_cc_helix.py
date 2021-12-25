@@ -23,7 +23,7 @@ def get_rot_trans(mob_coords, targ_coords):
     return R, mob_coords_com, targ_coords_com
 
 #----------------------------
-def generate_default_CrickBB()
+def generate_default_CrickBB():
     chains = 4
     chL = 28
     r0 = 7.36
