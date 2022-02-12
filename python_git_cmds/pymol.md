@@ -49,3 +49,11 @@ group clu20, AAMetalPhiPsi_HIS_cluster_20_*
 
 # Change radius of stick
 set_bond stick_radius, 0.1, all
+
+# Align several structure
+extra_fit selection that you want to fit (i.e., n. Ca), model to align to, alignment method (i.e., align)
+
+extra_fit n. Ca, 1dmm_16-20-28_H-H-D_a, align
+
+# Crystal structures
+symexp sym,1dmm,(1dmm),5
