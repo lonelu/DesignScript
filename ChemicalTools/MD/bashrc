@@ -1,0 +1,37 @@
+# .bashrc
+
+# Source global definitions
+if [ -f /etc/bashrc ]; then
+	. /etc/bashrc
+fi
+
+export PATH=$/home/lonelu/.openmpi/bin:$PATH
+export LD_LIBRARY_PATH=$/home/lonelu/.openmpi/bin:$LD_LIBRARY_PATH
+
+export GAUSS_SCRDIR=/home/lonelu/scratch
+source $g09root/g09/bsd/g09.profile
+
+# User specific aliases and functions
+module load gcc gauss09/E.01
+module load slurm 
+ 
+module load cuda55/toolkit
+module load hdf5
+module load fftw2
+
+module load gromacs/2018.8_cuda8_gcc5 gromacs/2018.8_cuda10_gcc6 cuda10.0/blas/10.0.130 cuda10.0/fft/10.0.130 cuda10.0/nsight/10.0.130 cuda10.0/profiler/10.0.130 cuda10.0/toolkit/10.0.130
+ 
+ 
+#AMBER 14
+export AMBERHOME=/cm/shared/apps/amber14
+export CUDA_HOME=/cm/shared/apps/cuda55/toolkit/current/
+export LD_LIBRARY_PATH=$CUDA_HOME/lib:$CUDA_HOME/lib64:$LD_LIBRARY_PATH
+export PATH=$AMBERHOME/bin:$PATH
+export NCIPLOT_HOME=$/home/lonelu/nciplot-3.0/
+ 
+#g09
+export PATH=$/cm/shared/apps/gauss09/E.01/g09:$PATH
+export export GAUSS_EXEDIR=/cm/shared/apps/gauss09/E.01/g09
+
+
+

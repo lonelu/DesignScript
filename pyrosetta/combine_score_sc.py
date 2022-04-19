@@ -1,6 +1,11 @@
 import os
 
-workdir = '/mnt/e/DesignData/ligands/LigandBB/_lig_fe/_ntf2_rosetta/output_2/'
+'''
+python /mnt/e/GitHub_Design/DesignScript/pyrosetta/combine_score_sc.py
+'''
+
+#workdir = '/mnt/e/DesignData/ligands/LigandBB/_lig_fe/_ntf2_rosetta_86-88-101/_rosetta_r1/output_1/'
+workdir = '/mnt/e/DesignData/ligands/LigandBB/_lig_fe/_ntf2_rosetta_86-88-101/_rosetta_r3/output_59Y/'
 
 title = ''
 

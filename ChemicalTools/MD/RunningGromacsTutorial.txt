@@ -1,0 +1,71 @@
+Gromacs Tutorials: http://www.mdtutorials.com/gmx/
+
+1. Source things required to run gromacs in command line on DeGrabo:
+
+source /cm/shared/apps/amber/amber18.17/amber.sh
+source /cm/shared/apps/gromacs/2018.8_cuda8_gcc5/bin/GMXRC
+source /cm/shared/apps/gromacs/2018.8_cuda10_gcc6/bin/GMXRC
+
+2. Prepare the input pdb file:
+
+gmx pdb2gmx -f input.pdb -o input_processed.gro -water spc #water has many options but this is a standard one
+
+select option 6 for the forcefield "AMBER99SB-ILDN protein" as a standard choice
+
+at bottom of newly generated topol.top file you should see all the elements of your pdb (i.e., protein and ions currently)
+
+can use the editconf file
+
+gmx pdb2gmx -f input_processed.gro -o input_processed.pdb -water spc
+
+3. Generate the box around your protein: 
+
+gmx editconf -f input_processed.gro -o input_newbox.gro -c -d 1.0 -bt dodecahedron 
+
+Check the strcture to make sure the metal binding is correct.
+gmx editconf -f input_newbox.gro -o input_newbox.pdb
+
+-f is the input gro and should come from the above command
+-o is the output gro and will be used in next command
+dodecahedron is the most space efficient shape
+d 1.0 gives at least one angstrom of space to the edge
+
+4. Solvate the box around your protein:
+
+gmx solvate -cp input_newbox.gro -cs spc216.gro -o input_solv.gro -p topol.top
+
+-cp is the input gro and comes from above command
+-cs brings in the info for the water and is built in to the program
+-o is the output gro and will be needed for next command
+-p indicates that you can overwrite the topol.top file. this will also generate old files that start with a hashtag
+
+5. Generate the tpr file:
+
+gmx grompp -f min.mdp -c input_solv.gro -p topol.top -o ions.tpr
+
+-f you need to generate a min.mdp file in order to run. key are the integrator, emstep, emtol, and nsteps, at this stage most parameter sets will work
+-c is the .gro file you generated above
+-p topol.top again overwrites this file
+-o ions.tpr will generate this file needed for next step
+
+6. Add ions in to your system to neutralize
+
+gmx genion -s ions.tpr -o input_solv_ions.gro -p topol.top -pname NA -nname CL -neutral
+
+-s is the input file you generated above
+-o is the new gro file with ions added
+-p topol.top will again be overwritten
+-pname is the positive ion name (element name in all capitols, above is sodium)
+-nname is the negative ion name (element name in all capitols, above is chloride)
+-neutral gives you ions until neutral, you can also add ions to generate a certain molarity (i.e., 100 mM, in that case you need to know box size)
+
+7. minimize and run md:
+
+you could continue next steps in the command line or you could allow to run on the gpu with a slurm submission
+
+to run on slurm use the sub_prep.script
+
+
+# sbatch sub_prep.script
+# sbatch sub_md.script
+# squeue

@@ -57,3 +57,15 @@ extra_fit n. Ca, 1dmm_16-20-28_H-H-D_a, align
 
 # Crystal structures
 symexp sym,1dmm,(1dmm),5
+
+# Select aa
+sele resn ALA
+https://pymolwiki.org/index.php/Selection_Algebra
+
+
+# Connect two structure into one structure 
+>Build>Create bond
+alter sele, chain = 'A'
+alter sele, segi = ''
+sort
+rebuild
