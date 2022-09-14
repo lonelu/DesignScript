@@ -54,6 +54,7 @@ set_bond stick_radius, 0.1, all
 extra_fit selection that you want to fit (i.e., n. Ca), model to align to, alignment method (i.e., align)
 
 extra_fit n. Ca, 1dmm_16-20-28_H-H-D_a, align
+extra_fit n. Ca, helix6_10-14-139_lig318_loop2_ala, super
 
 # Crystal structures
 symexp sym,1dmm,(1dmm),5
@@ -69,3 +70,5 @@ alter sele, chain = 'A'
 alter sele, segi = ''
 sort
 rebuild
+
+

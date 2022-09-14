@@ -1,0 +1,26 @@
+CCCP (Coiled-Coil Crick Parameterization) is an open-source suite for 
+fitting optimal Crick parameters to protein backbones and generating 
+ideal coiled-coil backbones from Crick parameters.
+Copyright (C) 2011-2017 Gevorg Grigoryan
+
+Web site: http://www.grigoryanlab.org/cccp/
+
+If used in a scientific publication, please cite:
+G. Grigoryan, W. F. DeGrado, "Probing Designability via a Generalized 
+Model of Helical Bundle Geometry", J. Mol. Biol., 405(4): 1079-1100 (2011)
+
+The Accommodation Index Analizer is a program that detects and
+classifies local structural perturbations in coiled coils (e.g., insertions
+and deletions) by using local Crick parameter fits.
+Copyright (C) 2016, 2017    Nathan Schmidt, Gevorg Grigoryan
+
+If used in a scientific publication, please cite:
+N. W. Schmidt, G. Grigoryan, W. F. DeGrado, "The accommodation index
+measures the perturbation associated with insertions and deletions in 
+coiled-coils: Application to understand signaling in histidine kinases",
+Protein Science, 2017.
+
+Contact:
+Gevorg Grigoryan
+gevorg.grigoryan@dartmouth.edu
+Dartmouth College

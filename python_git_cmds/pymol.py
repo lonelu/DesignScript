@@ -29,15 +29,16 @@ for _file in glob.glob(os.path.join(workdir, '*.pdb')):
     cmd.load(_file)
 seleobjs = cmd.get_names()
 
+
 pdb_rmsds = []
-for i in range(0, len(seleobjs) - 1, 2):
-    rmsd = cmd.align(seleobjs[i], seleobjs[i+1])    
-    pdb_rmsds.append((seleobjs[i], rmsd))
+for i in range(0, len(seleobjs) - 1):
+    rmsd = cmd.align(seleobjs[i], seleobjs[len(seleobjs) - 1])    
+    pdb_rmsds.append((seleobjs[i],seleobjs[len(seleobjs) - 1], rmsd))
 
 
 with open(workdir + '_pymol.txt', 'w') as f:
     for prd in pdb_rmsds:
-        f.write(prd[0] + '\t' + '\t'.join([str(round(x, 2)) for x in prd[1]]) + '\n')
+        f.write(prd[0] + '\t' + prd[1] + '\t' + '\t'.join([str(round(x, 2)) for x in prd[1]]) + '\n')
 
 
 

@@ -1,0 +1,79 @@
+pdb = pr.parsePDB('/home/gpu/Sam/surface_design/surface_design_test/backbone_4hbonds_loops_round9_70_all_ala.pdb')  **path to input pdb
+top = Topology(**dict(constrained_rns=[18, 25, 68, 75, 109, 116, 166, 170, 173, 177], constrained_rns_vals=[-1, 0, 0, 0, 1, 0, 0, 0, 0, 0 ]))  **list of constrained residues paired with list of res type (-1, 0, or 1)
+
+top.load_pdb(pdb, selection='resnum 1to43 48to88 95to138 142to182') **list of residues per helix ***important that helix 2 and helix 4 are same length**
+top.load_pdb_ala(pdb, selection='resnum 1to43 48to88 95to138 142to182') **same list of residues
+top.set_topologies(outdir='/home/gpu/Sam/surface_design/surface_design_test/output') **path to output
+top.set_surface_res()
+top.set_contacts()
+top.run_mc(num_iterations=400000)
+seqs = [top.seqs[i] for i in range(len(top.seqs)) if np.sum(list(top.seqs[i].values())) <= -2]
+en_gaps = [top.en_gaps[i] for i in range(len(top.seqs)) if np.sum(list(top.seqs[i].values())) <= -2]
+en_fs = [top.en_fs[i] for i in range(len(top.seqs)) if np.sum(list(top.seqs[i].values())) <= -2]
+seq_rep_lens = [top.seq_rep_lens[i] for i in range(len(top.seqs)) if np.sum(list(top.seqs[i].values())) <= -2]
+top.seq_rep_lens = seq_rep_lens
+top.en_gaps = en_gaps
+top.en_fs = en_fs
+top.seqs = seqs
+top.find_pareto_front()
+top.find_nearest_utopian_pt(weight_en_f=0.75, weight_seq_rep_len=0.5)
+top.map_seq_resnums_to_pdb(pdb)
+top.set_charge_groups(top.seqs[top.nearest_utopian_pt])
+top.print_charge_groups()
+top.save_sequence(top.seqs[top.nearest_utopian_pt], outdir='output/')
+pr.execDSSP('backbone_4hbonds_loops_round9_70_all_ala.pdb') **name of input pdb to be convered to .dssp file
+
+import pickle
+dssp = parse_dssp('/home/gpu/Sam/surface_design/surface_design_test/backbone_4hbonds_loops_round9_70_all_ala.dssp') **path to newly made .dssp file (probably same path as pdb file)
+
+def rec_dd():
+    """returns a recursive dictionary"""
+    return defaultdict(rec_dd)
+with open('/home/gpu/kehan/projects/rosetta/resfile_topology/ss_burial_propensity_label_dict_20180902.pkl', 'rb') as infile: **path to .pkl file
+    ss_bur_prop_label_dict = pickle.load(infile)
+polar_dict = {}
+polar_dict[-1] = set('ED')
+polar_dict[1] = set('KR')
+polar_dict[0] = polar_dict[-1] | polar_dict[1]
+
+with open('/home/gpu/kehan/projects/rosetta/resfile_topology/output/surface_sequence.txt','r') as infile:  **path to output surface_sequence file
+    infile.readline()
+    surface_seq = {}
+    for line in infile:
+        line = line.split()
+        surface_seq[int(line[0])] = int(line[1])
+with open('resfile_round9.txt', 'r') as infile: **name of input resfile
+    resfile = {}
+    infile.readline()
+    for line in infile:
+        try:
+            line = line.strip().split()
+            resfile[(int(line[0]), line[1])] = line[2:]
+        except:
+            pass
+pdb_ala = pr.parsePDB('backbone_4hbonds_loops_round9_70_all_ala.pdb') **name of input pdb
+resind_exp, resind_int, resind_bur = partition_res_by_burial(pdb_ala, alpha=9)
+resnum_exp = set(pdb_ala.select('resindex ' + ' '.join([str(r) for r in resind_exp])).getResnums())
+resnum_int = set(pdb_ala.select('resindex ' + ' '.join([str(r) for r in resind_int])).getResnums())
+resnum_bur = set(pdb_ala.select('resindex ' + ' '.join([str(r) for r in resind_bur])).getResnums())
+dontallow_global = ('CH')
+add_to_all = ('AV')
+res_burial_map = {}
+for res in resnum_exp:
+    res_burial_map[res] = 'e'
+for res in resnum_int:
+    res_burial_map[res] = 'i'
+for res in resnum_bur:
+    res_burial_map[res] = 'b'
+with open('resfile_round9.txt', 'a') as outfile:  **name of input resfile
+    for (res, ch), ss in dssp.items():
+        if (res, ch) in resfile.keys():
+            continue
+        bur = res_burial_map[res]
+        aa_set = {aa for aa, prop in ss_bur_prop_label_dict[ss][bur].items() if np.round(prop, 1) >= 0.9} - dontallow_global
+        aa_set |= add_to_all
+        if res in surface_seq.keys():
+            q = surface_seq[res]
+            aa_set = aa_set - polar_dict[-1*q]
+        line = str(res) + ' ' + ch + ' PIKAA ' + ''.join(aa_set) + ' \n'
+        outfile.write(line)

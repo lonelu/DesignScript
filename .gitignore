@@ -17,5 +17,5 @@ designs/
 # Others
 data/
 gpu_run/
-MetalDesign/__pycache__/
+*/__pycache__/
 *.pyc
