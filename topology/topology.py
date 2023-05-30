@@ -402,7 +402,9 @@ def check_helix_lengths(hels):
     f = np.arange(1, num_helices)
     r = np.array(list(reversed(range(1, num_helices))))
     eq_len_helices = r != f
+    print(eq_len_helices)
     lens = np.array([len(hel) for hel in hels[1:]])
+    print(lens)
     if len(np.unique(lens[eq_len_helices])) == 1:
         return True
     else:
@@ -417,6 +419,7 @@ def order_helices(hels):
         hels.rotate(1)
         i += 1
         if i > 10:
+            break
             raise ValueError('Helices are not same length.')
     return list(hels)
 

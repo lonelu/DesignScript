@@ -148,4 +148,28 @@ constrained_rns=[]
 constrained_rns_vals=[]
 selection=None
 
+#>>> fluo
+workdir = '/mnt/e/DesignData/bpp_fluo_comb/fluo/output1_09_f63440_nick_ala/sel/Rosetta/'
+outdir = workdir + 'topo_output1/'
+pdb_file = 'bb_prep_ALA_topo.pdb'
+constrained_rns=[]
+constrained_rns_vals=[]
+selection='resnum 5to26 33to54 59to80 87to108'
+
+#>>> 44b
+workdir = '/mnt/e/DesignData/bpp_fluo_comb/44b/44b_kp/'
+outdir = workdir + 'topo_output/'
+pdb_file = 'bb_prep_ALA_topo_A.pdb'
+constrained_rns=[]
+constrained_rns_vals=[]
+selection='resnum 1to19 26to44 52to70 82to100'
+
+#>>> short599
+workdir = workdir = '/mnt/e/DesignData/Chemodrugs/HB_RUC_short/loop5/Rosetta/'
+outdir = workdir + 'topo_output/'
+pdb_file = 'bb_prep_ALA_topo.pdb'
+constrained_rns=[]
+constrained_rns_vals=[]
+selection='resnum 5to22 27to44 52to69 73to90'
+
 run_topology(workdir, outdir, pdb_file, constrained_rns, constrained_rns_vals, selection, resfile_pre= None)

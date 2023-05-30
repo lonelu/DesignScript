@@ -1,9 +1,0 @@
-seleobjs = cmd.get_object_list('(SER_ASP*)')
-for obj in seleobjs: cmd.pair_fit("%s/A/Y/10/CG+OD1+OD2" % obj, "ASP_HIS_527_C_2.257_29040_4_helix/A/X/10/CG+OD1+OD2")
-
-for obj in seleobjs: cmd.pair_fit("%s/A/Y/10/CD+OE1+OE2" % obj, "ASP_HIS_527_C_2.257_29040_4_helix/A/X/10/CD+OE1+OE2")
-
-for obj in seleobjs: cmd.pair_fit("%s/A/Y/10/CG+OD1+OD2" % obj, "ASP_1.953_orient1/A/A/49/CG+OD1+OD2")
-
-seleobjs = cmd.get_object_list('(ASN_GLU*)')
-for obj in seleobjs: cmd.pair_fit("%s/A/Y/10/CD+OE1+OE2" % obj, "GLU_HIS_301_C_2.168_5862_3_helix/A/X/10/CD+OE1+OE2")

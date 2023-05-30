@@ -27,3 +27,24 @@ def main():
     return
 
 main()
+
+
+###
+def test():
+    indir = '/mnt/e/DesignData/bpp_fluo_comb/fluo/output1_09_f63440_nick_ala/sel/Rosetta/'
+    outdir = indir
+    pdb_name = 'bb_only.pdb'
+    aa = 'A'
+    pose = rosetta.core.import_pose.pose_from_file(indir + pdb_name)
+    for i in range(1, pose.pdb_info().nres()+ 1):
+        mutate.mutate_residue(pose, i, aa)
+    pose.dump_pdb(os.path.join(outdir, pdb_name[:-4] + '_' + aa + '.pdb'))
+
+    indir = '/mnt/e/DesignData/bpp_fluo_comb/44b/44b_kp/'
+    outdir = indir
+    pdb_name = 'bb_prep_ALA_topo.pdb'
+    aa = 'A'
+    pose = rosetta.core.import_pose.pose_from_file(indir + pdb_name)
+    for i in range(1, pose.pdb_info().nres()+ 1):
+        mutate.mutate_residue(pose, i, aa)
+    pose.dump_pdb(os.path.join(outdir, pdb_name[:-4] + '_' + aa + '.pdb'))

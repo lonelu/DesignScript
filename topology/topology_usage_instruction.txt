@@ -1,8 +1,15 @@
-pdb = pr.parsePDB('/home/gpu/Sam/surface_design/surface_design_test/backbone_4hbonds_loops_round9_70_all_ala.pdb')  **path to input pdb
-top = Topology(**dict(constrained_rns=[18, 25, 68, 75, 109, 116, 166, 170, 173, 177], constrained_rns_vals=[-1, 0, 0, 0, 1, 0, 0, 0, 0, 0 ]))  **list of constrained residues paired with list of res type (-1, 0, or 1)
+workdir = '/mnt/e/DesignData/bpp_fluo_comb/44b/44b_kp/'
+outdir = workdir + 'topo_output/'
+pdb_file = 'bb_prep_ALA_topo.pdb'
+constrained_rns=[]
+constrained_rns_vals=[]
+selection='resnum 1to19 25to46 52to70 82to103'
 
-top.load_pdb(pdb, selection='resnum 1to43 48to88 95to138 142to182') **list of residues per helix ***important that helix 2 and helix 4 are same length**
-top.load_pdb_ala(pdb, selection='resnum 1to43 48to88 95to138 142to182') **same list of residues
+pdb = pr.parsePDB(pdb_file)  **path to input pdb
+top = Topology(**dict(constrained_rns, constrained_rns_vals))  **list of constrained residues paired with list of res type (-1, 0, or 1)
+
+top.load_pdb(pdb, selection) **list of residues per helix ***important that helix 2 and helix 4 are same length**
+top.load_pdb_ala(pdb, selection) **same list of residues
 top.set_topologies(outdir='/home/gpu/Sam/surface_design/surface_design_test/output') **path to output
 top.set_surface_res()
 top.set_contacts()

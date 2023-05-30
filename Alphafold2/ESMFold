@@ -1,0 +1,6 @@
+1. Copy this line of the code and paste it in the PyMOL command prompt:
+run https://raw.githubusercontent.com/JinyuanSun/PymolFold/main/predict_structure.py
+2. then input the designed sequence (here just something I was playing with):
+esmfold GADTLFTQLQRTLEQGRANTVDSAAQAILSRLNSVLEAAWKTILNLASATDAAEKAYKEGREEDLKTYLDQARSYQSQVDQYAVETVRLLRELKKVFPDEEADRALQIAEKLLKTVQEASKTLDTAVKAARNGDEETFAKAFNQF, esm_0st
+color_plddt
+orient
